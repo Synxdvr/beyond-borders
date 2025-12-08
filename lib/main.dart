@@ -7,7 +7,7 @@ import 'package:beyond_borders/services/auth_wrapper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:lottie/lottie.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
+// Remove this line: import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:beyond_borders/authentication/login.dart';
 import 'package:beyond_borders/authentication/main_page.dart';
 import 'package:beyond_borders/pages/destinations.dart';
@@ -17,13 +17,32 @@ import 'package:beyond_borders/pages/settings.dart';
 import 'package:beyond_borders/pages/wishlist.dart';
 import 'package:beyond_borders/authentication/forgot_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart'; // Add this for kIsWeb
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyDmHsaXh1Om-eiaA9l78A0y_nM4_qNecxc", // Paste your API Key here
+        authDomain: "test-project-60c5e.firebaseapp.com",
+        projectId: "test-project-60c5e",
+        storageBucket: "test-project-60c5e.firebasestorage.app",
+        messagingSenderId: "472457433132",
+        appId: "1:472457433132:web:a07489ceb3131707008189",
+      ),
+    );
+  } else {
+    // Android/iOS still use the auto-config
+    await Firebase.initializeApp();
+  }
+
   await dotenv.load();
   runApp(const MyApp());
 }
+
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -38,77 +57,12 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _initializeDynamicLinks();
+    // Remove dynamic links initialization
+    // _initializeDynamicLinks();
   }
 
-  Future<void> _initializeDynamicLinks() async {
-    // Handle links when app is opened from the terminated state (app was not running)
-    final PendingDynamicLinkData? initialLink = await FirebaseDynamicLinks.instance.getInitialLink();
-
-    if (initialLink != null) {
-      _handleDynamicLink(initialLink);
-    }
-
-    // Handle links when app is in the foreground or background
-    FirebaseDynamicLinks.instance.onLink.listen((dynamicLinkData) {
-      _handleDynamicLink(dynamicLinkData);
-    }).onError((error) {
-      print('Dynamic Link Error: ${error.message}');
-    });
-  }
-
-  void _handleDynamicLink(PendingDynamicLinkData data) {
-    final Uri deepLink = data.link;
-
-    print('Received dynamic link: ${deepLink.toString()}');
-    print('Path: ${deepLink.path}');
-    print('Query parameters: ${deepLink.queryParameters}');
-
-    // Handle reset password links
-    if (deepLink.path.contains('reset-password')) {
-      // First check the query parameters of the main URL
-      String? actionCode = deepLink.queryParameters['oobCode'];
-
-      // If not found directly, check if it's in a nested URL parameter
-      if (actionCode == null) {
-        // The "link" parameter might contain the actual deep link with parameters
-        final String? linkParam = deepLink.queryParameters['link'];
-        if (linkParam != null) {
-          try {
-            // Parse the nested URL to extract its parameters
-            final Uri nestedLink = Uri.parse(linkParam);
-            actionCode = nestedLink.queryParameters['oobCode'];
-            print('Found oobCode in nested link: $actionCode');
-          } catch (e) {
-            print('Error parsing nested link: $e');
-          }
-        }
-      }
-
-      // Process the action code if found
-      if (actionCode != null && actionCode != '{oobCode}' && !actionCode.contains('{oob')) {
-        print('Valid action code detected: $actionCode');
-
-        _navigatorKey.currentState?.pushNamed(
-          '/reset-password',
-          arguments: {'actionCode': actionCode},
-        );
-
-        print('Navigation completed');
-      } else {
-        print('Invalid or placeholder action code detected: $actionCode');
-        _navigatorKey.currentState?.pushNamed('/login');
-
-        ScaffoldMessenger.of(_navigatorKey.currentContext!).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid password reset link. Please request a new one.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
+  // Remove the entire _initializeDynamicLinks method
+  // Remove the entire _handleDynamicLink method
 
   @override
   Widget build(BuildContext context) {

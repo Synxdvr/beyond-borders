@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import 'package:beyond_borders/pages/destinations.dart';
 import 'package:beyond_borders/authentication/registration.dart';
 import 'package:beyond_borders/authentication/custom_auth_appbar.dart';
+import 'package:beyond_borders/authentication/forgot_password.dart';
 import 'package:beyond_borders/services/auth_service.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Import this for specific error codes
 
@@ -291,7 +292,13 @@ class _LoginState extends State<Login> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => _showForgotPasswordDialog(context),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ForgotPasswordScreen()),
+                              );
+                            },
                             child: Text(
                               'Forgot Password?',
                               style: TextStyle(color: Colors.blue),
@@ -404,118 +411,6 @@ class _LoginState extends State<Login> {
             ),
           ],
         );
-      },
-    );
-  }
-
-  // Show Forgot Password Dialog with error handling
-  void _showForgotPasswordDialog(BuildContext context) {
-    final TextEditingController resetEmailController = TextEditingController();
-    String? resetEmailError;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return StatefulBuilder(builder: (context, setState) {
-          return AlertDialog(
-            title: Text('Reset Password'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Enter your email to receive a password reset link'),
-                SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      controller: resetEmailController,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.email),
-                        errorStyle: TextStyle(height: 0, fontSize: 0),
-                        // Add red border if there's an error
-                        enabledBorder: resetEmailError != null
-                            ? OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red),
-                              )
-                            : null,
-                        focusedBorder: resetEmailError != null
-                            ? OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.red),
-                              )
-                            : null,
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    if (resetEmailError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16.0, top: 8.0),
-                        child: Text(
-                          resetEmailError!,
-                          style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 12.0,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (resetEmailController.text.isEmpty) {
-                    setState(() {
-                      resetEmailError = 'Email is required';
-                    });
-                    return;
-                  }
-
-                  try {
-                    await _authService.resetPassword(resetEmailController.text);
-                    Navigator.pop(dialogContext);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Password reset email sent!')),
-                    );
-                  } catch (e) {
-                    print("Reset password error: $e"); // Log for debugging
-
-                    String errorMsg = e.toString().toLowerCase();
-
-                    // Parse the error message to determine appropriate feedback
-                    if (errorMsg.contains('user-not-found') ||
-                        errorMsg.contains('no user record') ||
-                        errorMsg.contains('user not found')) {
-                      setState(() {
-                        resetEmailError =
-                            'No user found with this email address';
-                      });
-                    } else if (errorMsg.contains('invalid-email') ||
-                        errorMsg.contains('badly formatted')) {
-                      setState(() {
-                        resetEmailError = 'Please enter a valid email address';
-                      });
-                    } else {
-                      setState(() {
-                        resetEmailError =
-                            'Failed to send reset email. Please try again.';
-                      });
-                    }
-                  }
-                },
-                child: Text('Send Reset Link'),
-              ),
-            ],
-          );
-        });
       },
     );
   }

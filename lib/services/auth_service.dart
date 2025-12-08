@@ -138,58 +138,39 @@ class AuthService {
     final normalizedEmail = email.trim().toLowerCase();
     print('Checking if email exists: $normalizedEmail');
 
+    // 1. Try Firestore first (Avoids billing error for fetchSignInMethodsForEmail)
     try {
-      // First approach: Check sign-in methods
+      final firestoreUsers = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: normalizedEmail)
+          .limit(1)
+          .get();
+
+      if (firestoreUsers.docs.isNotEmpty) {
+        print('User found in Firestore database');
+        return true;
+      }
+    } catch (e) {
+      print('Firestore check error: $e');
+      // Continue to other methods if this fails
+    }
+
+    // 2. Try fetchSignInMethodsForEmail (Might fail without billing)
+    try {
       final methods = await _auth.fetchSignInMethodsForEmail(normalizedEmail);
       print('Sign-in methods found: ${methods.join(', ')}');
 
       if (methods.isNotEmpty) {
         return true;
       }
-
-      // IMPORTANT FIX: Try a backup approach to check if email exists
-      // Option 1: If you have Firestore with user data
-      try {
-        final firestoreUsers = await FirebaseFirestore.instance
-            .collection('users')
-            .where('email', isEqualTo: normalizedEmail)
-            .limit(1)
-            .get();
-
-        if (firestoreUsers.docs.isNotEmpty) {
-          print('User found in Firestore database');
-          return true;
-        }
-      } catch (e) {
-        print('Firestore check error (non-critical): $e');
-        // Continue with other checks even if this one fails
-      }
-
-      // If you don't have Firestore or want an additional check
-      // Consider adding a custom claim or another database check here
-
-      // For debugging: Get all users
-      // This is for development only - remove in production!
-      try {
-        // If you have admin SDK access or a backend API that can list users
-        // List a few users to see what's in the database
-        print('Debug: Could not find user with email $normalizedEmail');
-      } catch (e) {
-        print('Debug error: $e');
-      }
-
-      // If all checks fail, the email doesn't exist
-      return false;
-    } on FirebaseAuthException catch (e) {
-      print('Firebase Auth Exception: ${e.code} - ${e.message}');
-      if (e.code == 'user-not-found') {
-        return false;
-      }
-      throw _handleAuthException(e);
     } catch (e) {
-      print('Unexpected error checking email: $e');
-      throw Exception('Failed to check email: ${e.toString()}');
+      // Just log this error as it's likely the permission denied/billing error
+      // and we want to avoid crashing the app because of it
+      print('fetchSignInMethodsForEmail failed (billing might be required): $e');
     }
+
+    // If all checks fail, assume email doesn't exist
+    return false;
   }
 
 // Add a debug method to try to reset password directly

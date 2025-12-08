@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:settings_ui/settings_ui.dart';
 import 'package:beyond_borders/authentication/login.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
@@ -221,6 +220,46 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
+  Widget _buildSettingsSection(String title, List<Widget> tiles) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+        Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Column(children: tiles),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required String title,
+    String? description,
+    required IconData icon,
+    Color? iconColor,
+    VoidCallback? onTap,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: iconColor ?? Colors.blue),
+      title: Text(title),
+      subtitle: description != null ? Text(description) : null,
+      trailing: trailing,
+      onTap: onTap,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,52 +267,49 @@ class _SettingsPageState extends State<SettingsPage> {
       drawer: CustomDrawer(),
       body: Stack(
         children: [
-          SettingsList(
-            sections: [
-              SettingsSection(
-                title: const Text('Location Settings'),
-                tiles: [
-                  SettingsTile(
-                    title: const Text('Location Access'),
-                    description: Text(_locationEnabled
+          ListView(
+            children: [
+              _buildSettingsSection(
+                'Location Settings',
+                [
+                  _buildSettingsTile(
+                    title: 'Location Access',
+                    description: _locationEnabled
                         ? 'Location access is enabled'
-                        : 'App needs location access to find nearby activities'),
-                    leading: Icon(
-                      _locationEnabled ? Icons.location_on : Icons.location_off,
-                      color: _locationEnabled ? Colors.green : Colors.grey,
+                        : 'App needs location access to find nearby activities',
+                    icon: _locationEnabled ? Icons.location_on : Icons.location_off,
+                    iconColor: _locationEnabled ? Colors.green : Colors.grey,
+                    onTap: _requestLocationPermission,
+                  ),
+                ],
+              ),
+              _buildSettingsSection(
+                'Notifications',
+                [
+                  _buildSettingsTile(
+                    title: 'Likes on your posts',
+                    icon: Icons.thumb_up,
+                    trailing: Switch(
+                      value: _notifyLikes,
+                      onChanged: (value) {
+                        setState(() {
+                          _notifyLikes = value;
+                        });
+                        _saveSettings();
+                      },
                     ),
-                    onPressed: (context) {
-                      _requestLocationPermission();
-                    },
                   ),
                 ],
               ),
-              SettingsSection(
-                title: const Text('Notifications'),
-                tiles: [
-                  SettingsTile.switchTile(
-                    title: const Text('Likes on your posts'),
-                    leading: const Icon(Icons.thumb_up),
-                    initialValue: _notifyLikes,
-                    onToggle: (value) {
-                      setState(() {
-                        _notifyLikes = value;
-                      });
-                      _saveSettings();
-                    },
-                  ),
-                ],
-              ),
-              SettingsSection(
-                title: const Text('Account'),
-                tiles: [
-                  SettingsTile(
-                    title: const Text('Delete Account'),
-                    description: const Text('Permanently delete your account and all data'),
-                    leading: const Icon(Icons.delete_forever, color: Colors.red),
-                    onPressed: (context) {
-                      _deleteAccount();
-                    },
+              _buildSettingsSection(
+                'Account',
+                [
+                  _buildSettingsTile(
+                    title: 'Delete Account',
+                    description: 'Permanently delete your account and all data',
+                    icon: Icons.delete_forever,
+                    iconColor: Colors.red,
+                    onTap: _deleteAccount,
                   ),
                 ],
               ),

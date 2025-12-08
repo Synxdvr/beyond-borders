@@ -34,18 +34,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      final emailExists = await _authService.checkEmailExists(email);
-
-      if (!emailExists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No account found with this email address.')),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
+      // 1. Attempt to send reset email directly first (most robust method without billing)
+      // This will either send it (success) or fail if user doesn't exist (in some configs)
+      // or simply always succeed for privacy reasons depending on Firebase console settings.
       await _authService.sendPasswordResetEmail(email);
 
       setState(() {
@@ -53,12 +44,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      print("Send password reset error: $e");
+      
+      // Even if it fails, we might want to check if it's because the user doesn't exist
+      // But for security/privacy, Firebase often doesn't reveal this easily without billing enabled for the enumeration API.
+      // So we'll try our best-effort check if the first attempt failed.
+      
+      bool userExists = false;
+      try {
+        userExists = await _authService.checkEmailExists(email);
+      } catch (checkErr) {
+        print("Check email error: $checkErr");
+        // Ignore check error
+      }
+
       setState(() {
         _isLoading = false;
       });
 
+      String errorMessage = e.toString();
+      
+      if (!userExists && errorMessage.contains('user-not-found')) {
+         errorMessage = 'No account found with this email address.';
+      } else {
+         errorMessage = errorMessage.replaceAll('Exception: ', '');
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+        SnackBar(content: Text(errorMessage)),
       );
     }
   }
