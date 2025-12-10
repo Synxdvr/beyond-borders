@@ -58,7 +58,7 @@ class _CommunityPageState extends State<CommunityPage> {
   void initState() {
     super.initState();
     _database.databaseURL =
-        'https://beyond-borders-457415-default-rtdb.asia-southeast1.firebasedatabase.app/';
+        'https://test-project-60c5e-default-rtdb.asia-southeast1.firebasedatabase.app/';
     _postsRef = _database.ref().child('posts');
     _usersRef = _database.ref().child('users');
     _notificationsRef = _database.ref().child('notifications');

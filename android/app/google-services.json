@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "303316346586",
-    "firebase_url": "https://beyond-borders-457415-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "project_id": "beyond-borders-457415",
-    "storage_bucket": "beyond-borders-457415.firebasestorage.app"
+    "project_number": "472457433132",
+    "firebase_url": "https://test-project-60c5e-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "test-project-60c5e",
+    "storage_bucket": "test-project-60c5e.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:303316346586:android:38030eec3260ce4807a7e3",
+        "mobilesdk_app_id": "1:472457433132:android:e9a0ce4864059b0e008189",
         "android_client_info": {
           "package_name": "com.example.beyond_borders"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDJUB2yWSLEKKN3iX9gt-Bq4l2eCMVkxTA"
+          "current_key": "AIzaSyAT8xL8J2jt83lyIIs0C7zEI0OmOv0S0oY"
         }
       ],
       "services": {
